@@ -7,7 +7,7 @@ namespace Graph
         because every triangle in the Delaunay triangulation corresponds to a polygon corner in the Voronoi diagram and
         every polygon in the Voronoi diagram corresponds to a corner of a Delaunay triangle. 
     **/
-    public class Edge
+    public class DoubleEdge
     {
         public int index;
         public Center d0, d1; // Delaunay edge

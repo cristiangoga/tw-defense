@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using Graph;
+using MapGen;
 
 public class VoronoiDemo : MonoBehaviour
 {
@@ -10,7 +11,7 @@ public class VoronoiDemo : MonoBehaviour
 
     private float m_mapWidth = 100;
     private float m_mapHeight = 50;
-    private List<Edge> m_edges;
+    private List<DoubleEdge> m_edges;
     private List<Center> m_centers;
     private List<Corner> m_corners;
 
@@ -29,7 +30,7 @@ public class VoronoiDemo : MonoBehaviour
 
     private void Demo()
     {
-        MyMap map = new MyMap(m_mapWidth, m_mapHeight, m_pointCount);
+        MapBuilder map = new MapBuilder(m_mapWidth, m_mapHeight, m_pointCount);
         m_edges = map.Edges;
         m_centers = map.Centers;
         m_corners = map.Corners;

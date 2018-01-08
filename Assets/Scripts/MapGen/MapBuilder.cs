@@ -3,10 +3,11 @@ using Delaunay.Geo;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Graph;
 
-namespace Graph
+namespace MapGen
 {
-    public class MyMap
+    public class MapBuilder
     {
         private float width;
         private float height;
@@ -16,7 +17,7 @@ namespace Graph
         private List<Vector2> points;  // Only useful during map construction
         private List<Center> _centers;
         private List<Corner> _corners;
-        private List<Edge> _edges;
+        private List<DoubleEdge> _edges;
 
         public const int NUM_LLOYD_ITERATIONS = 2;
 
@@ -36,7 +37,7 @@ namespace Graph
             }
         }
 
-        public List<Edge> Edges
+        public List<DoubleEdge> Edges
         {
             get
             {
@@ -44,7 +45,7 @@ namespace Graph
             }
         }
 
-        public MyMap(float width, float height, int pointsCount)
+        public MapBuilder(float width, float height, int pointsCount)
         {
             this.width = width;
             this.height = height;
@@ -82,7 +83,7 @@ namespace Graph
 
             if (_edges == null)
             {
-                _edges = new List<Edge>();
+                _edges = new List<DoubleEdge>();
             }
             else
             {
@@ -121,7 +122,7 @@ namespace Graph
                 p.index = _centers.Count;
                 p.point = point;
                 p.neighbors = new List<Center>();
-                p.borders = new List<Edge>();
+                p.borders = new List<DoubleEdge>();
                 p.corners = new List<Corner>();
                 _centers.Add(p);
                 centerLookup[point] = p;
@@ -135,7 +136,7 @@ namespace Graph
 
                 // Fill the graph data. Make an Edge object corresponding to
                 // the edge from the voronoi library.
-                Edge edge = new Edge();
+                DoubleEdge edge = new DoubleEdge();
                 edge.index = _edges.Count;
                 edge.river = 0;
                 if (vedge.p0 != null && vedge.p1 != null)
@@ -248,7 +249,7 @@ namespace Graph
             q.border = (point.Value.x == 0 || point.Value.x == width
                             || point.Value.y == 0 || point.Value.y == height);
             q.touches = new List<Center>();
-            q.protrudes = new List<Edge>();
+            q.protrudes = new List<DoubleEdge>();
             q.adjacent = new List<Corner>();
             _corners.Add(q);
             cornerMap[bucket].Add(q);

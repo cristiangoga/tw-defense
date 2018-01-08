@@ -21,7 +21,7 @@ namespace Graph
         public float moisture;  // 0.0-1.0
 
         public List<Center> neighbors; //set of adjacent polygons
-        public List<Edge> borders; //set of bordering edges
+        public List<DoubleEdge> borders; //set of bordering edges
         public List<Corner> corners; //set of polygon corners
     }
 }

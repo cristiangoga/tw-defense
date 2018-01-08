@@ -21,7 +21,7 @@ namespace Graph
         public float moisture;  // 0.0-1.0
 
         public List<Center> touches; //set of polygons touching this corner
-        public List<Edge> protrudes; //set of edges touching the corner
+        public List<DoubleEdge> protrudes; //set of edges touching the corner
         public List<Corner> adjacent; //set of corners connected to this one
 
         public int river;  // 0 if no river, or volume of water in river

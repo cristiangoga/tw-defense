@@ -18,9 +18,11 @@ namespace MapGen
         private List<Center> _centers;
         private List<Corner> _corners;
         private List<DoubleEdge> _edges;
+        private IIslandShape islandShape;
+        private System.Random mapRandom;
 
         public const int NUM_LLOYD_ITERATIONS = 2;
-
+        public float LAKE_THRESHOLD = 0.3f;  // 0 to 1, fraction of water corners for water polygon
         public List<Center> Centers
         {
             get
@@ -50,8 +52,12 @@ namespace MapGen
             this.width = width;
             this.height = height;
             this.pointsCount = pointsCount;
+            islandShape = new RadialShape();
+            mapRandom = new System.Random();
             ResetLists();
             BuildGraph();
+            AssignCornerElevations();
+            AssignOceanCoastAndLand();
         }
 
         private void ResetLists()
@@ -261,6 +267,119 @@ namespace MapGen
             if (x != null && list.Find(y => y.Equals(x)) == null)
             {
                 list.Add(x);
+            }
+        }
+
+        // Determine elevations and water at Voronoi corners. By
+        // construction, we have no local minima. This is important for
+        // the downslope vectors later, which are used in the river
+        // construction algorithm. Also by construction, inlets/bays
+        // push low elevation areas inland, which means many rivers end
+        // up flowing out through them. Also by construction, lakes
+        // often end up on river paths because they don't raise the
+        // elevation as much as other terrain does.
+
+        private void AssignCornerElevations()
+        {
+            Queue<Corner> queue = new Queue<Corner>();
+            foreach (Corner corner in _corners)
+            {
+                Vector2 normalizedPoint = new Vector2(2.0f * (corner.point.x / width - 0.5f), 2.0f * (corner.point.y / height - 0.5f));
+                corner.water = !islandShape.IsInside(normalizedPoint);
+                // The edges of the map are elevation 0
+                if (corner.border)
+                {
+                    corner.elevation = 0.0f;
+                    queue.Enqueue(corner);
+                }
+                else {
+                    corner.elevation = float.PositiveInfinity;
+                }
+            }
+
+            // Traverse the graph and assign elevations to each point. As we
+            // move away from the map border, increase the elevations. This
+            // guarantees that rivers always have a way down to the coast by
+            // going downhill (no local minima).
+            while (queue.Count > 0)
+            {
+                Corner corner = queue.Dequeue();
+
+                foreach(Corner adjCorner in corner.adjacent) {
+                    // Every step up is epsilon over water or 1 over land. The
+                    // number doesn't matter because we'll rescale the
+                    // elevations later.
+                    float newElevation = 0.01f + corner.elevation;
+                    if (!corner.water && !adjCorner.water)
+                    {
+                        newElevation += 1;
+                        /*
+                        if (needsMoreRandomness)
+                        {
+                            // HACK: the map looks nice because of randomness of
+                            // points, randomness of rivers, and randomness of
+                            // edges. Without random point selection, I needed to
+                            // inject some more randomness to make maps look
+                            // nicer. I'm doing it here, with elevations, but I
+                            // think there must be a better way. This hack is only
+                            // used with square/hexagon grids.
+                            newElevation += mapRandom.NextDouble();
+                        }*/
+                    }
+                    // If this point changed, we'll add it to the queue so
+                    // that we can process its neighbors too.
+                    if (newElevation < adjCorner.elevation)
+                    {
+                        adjCorner.elevation = newElevation;
+                        queue.Enqueue(adjCorner);
+                    }
+                }
+            }
+
+        }
+
+        // Determine polygon and corner types: ocean, coast, land.
+        private void AssignOceanCoastAndLand()
+        {
+            // Compute polygon attributes 'ocean' and 'water' based on the
+            // corner attributes. Count the water corners per
+            // polygon. Oceans are all polygons connected to the edge of the
+            // map. In the first pass, mark the edges of the map as ocean;
+            // in the second pass, mark any water-containing polygon
+            // connected an ocean as ocean.
+            Queue<Center> queue = new Queue<Center>();
+            int numWater;
+            foreach (Center center in _centers)
+            {
+                numWater = 0;
+                foreach (Corner corner in center.corners)
+                {
+                    if (corner.border)
+                    {
+                        center.border = true;
+                        center.ocean = true;
+                        corner.water = true;
+                        queue.Enqueue(center);
+                    }
+                    if (corner.water)
+                    {
+                        numWater += 1;
+                    }
+                }
+                center.water = (center.ocean || numWater >= center.corners.Count * LAKE_THRESHOLD);
+            }
+
+            while (queue.Count > 0)
+            {
+                Center center = queue.Dequeue();
+                foreach (Center neighCenter in center.neighbors)
+                {
+                    if (neighCenter.water && !neighCenter.ocean)
+                    {
+                        neighCenter.ocean = true;
+                        queue.Enqueue(neighCenter);
+                    }
+                }
             }
         }
     }

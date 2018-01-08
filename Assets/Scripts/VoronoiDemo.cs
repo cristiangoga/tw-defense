@@ -47,29 +47,44 @@ public class VoronoiDemo : MonoBehaviour
             }
         }
 
-        Gizmos.color = Color.blue;
+        
         if (m_corners != null)
         {
             for (int i = 0; i < m_corners.Count; i++)
             {
+                if (m_corners[i].water)
+                {
+                    Gizmos.color = new Color(0, 0, 1 * m_corners[i].elevation);//Color.blue;
+                }
+                else
+                {
+                    Gizmos.color = new Color(0, 1 * m_corners[i].elevation, 0);
+                }
                 Gizmos.DrawSphere(m_corners[i].point, 0.2f);
             }
         }
 
         if (m_edges != null)
         {
-            Gizmos.color = Color.white;
             for (int i = 0; i < m_edges.Count; i++)
             {
                 if (m_edges[i].v0 != null && m_edges[i].v1 != null)
                 {
+                    if (m_edges[i].v0.water && m_edges[i].v1.water)
+                    {
+                        Gizmos.color = Color.blue;
+                    }
+                    else
+                    {
+                        Gizmos.color = Color.black;
+                    }
                     Vector2 left = m_edges[i].v0.point;
                     Vector2 right = m_edges[i].v1.point;
                     Gizmos.DrawLine((Vector3)left, (Vector3)right);
                 }
             }
         }
-
+/*
         Gizmos.color = Color.black;
         if (m_edges != null)
         {
@@ -80,7 +95,7 @@ public class VoronoiDemo : MonoBehaviour
                 Gizmos.DrawLine((Vector3)left, (Vector3)right);
             }
         }
-
+        */
         Gizmos.color = Color.yellow;
         Gizmos.DrawLine(new Vector2(0, 0), new Vector2(0, m_mapHeight));
         Gizmos.DrawLine(new Vector2(0, 0), new Vector2(m_mapWidth, 0));
